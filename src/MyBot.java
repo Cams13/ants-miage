@@ -87,16 +87,17 @@ public class MyBot extends Bot {
         for (Tile foodLoc : sortedFood) {
             for (Tile antLoc : sortedAnts) {
                 int distance = ants.getDistance(antLoc, foodLoc);
-                Route route = new Route(antLoc, foodLoc, distance);
+                
+                Route route = new Route(ants.pathFinding(antLoc,foodLoc));
                 foodRoutes.add(route);
             }
         }
         Collections.sort(foodRoutes);
         for (Route route : foodRoutes) {
-            if (!foodTargets.containsKey(route.getEnd())
-                    && !foodTargets.containsValue(route.getStart())
-                    && doMoveLocation(route.getStart(), route.getEnd())) {
-                foodTargets.put(route.getEnd(), route.getStart());
+            if (!foodTargets.containsKey(route.getRoute().get(route.getRoute().size()-1))
+                    && !foodTargets.containsValue(route.getRoute().get(0))
+                    && doMoveLocation(route.getRoute().getFirst(), route.getRoute().get(1))) {
+                foodTargets.put(route.getRoute().getLast(), route.getRoute().getFirst());
             }
         }
     }
@@ -117,14 +118,14 @@ public class MyBot extends Bot {
             for (Tile antLoc : sortedAnts) {
                 if (!orders.containsValue(antLoc)) {
                     int distance = ants.getDistance(antLoc, hillLoc);
-                    Route route = new Route(antLoc, hillLoc, distance);
+                    Route route = new Route(ants.pathFinding(antLoc,hillLoc));
                     hillRoutes.add(route);
                 }
             }
         }
         Collections.sort(hillRoutes);
         for (Route route : hillRoutes) {
-            doMoveLocation(route.getStart(), route.getEnd());
+            doMoveLocation(route.getRoute().getFirst(), route.getRoute().getLast());
         }
     }
     
@@ -135,12 +136,12 @@ public class MyBot extends Bot {
                 List<Route> unseenRoutes = new ArrayList<Route>();
                 for (Tile unseenLoc : unseenTiles) {
                     int distance = ants.getDistance(antLoc, unseenLoc);
-                    Route route = new Route(antLoc, unseenLoc, distance);
+                    Route route = new Route(ants.pathFinding(antLoc,unseenLoc));
                     unseenRoutes.add(route);
                 }
                 Collections.sort(unseenRoutes);
                 for (Route route : unseenRoutes) {
-                    if (doMoveLocation(route.getStart(), route.getEnd())) {
+                    if (doMoveLocation(route.getRoute().getFirst(), route.getRoute().getLast())) {
                         break;
                     }
                 }
