@@ -54,13 +54,9 @@ public class MyBot extends Bot {
         return false;
     }
 
-    @Override
-    public void doTurn() {
-        Ants ants = getAnts();
-        orders.clear();
-        Map<Tile, Tile> foodTargets = new HashMap<Tile, Tile>();
-        
-        // add all locations to unseen tiles set, run once
+    
+    public void detectUnseen(Ants ants){
+    	  // add all locations to unseen tiles set, run once
         if (unseenTiles == null) {
             unseenTiles = new HashSet<Tile>();
             for (int row = 0; row < ants.getRows(); row++) {
@@ -76,16 +72,18 @@ public class MyBot extends Bot {
                 locIter.remove();
             }
         }
-        
-        // prevent stepping on own hill
+    }
+    
+    public void preventSteppingHill(Ants ants){
+    	  // prevent stepping on own hill
         for (Tile myHill : ants.getMyHills()) {
             orders.put(myHill, null);
         }
-
+    }
+    
+    public void findFood(Ants ants,Map<Tile, Tile> foodTargets,  List<Route> foodRoutes,  TreeSet<Tile> sortedFood, TreeSet<Tile> sortedAnts){
         // find close food
-        List<Route> foodRoutes = new ArrayList<Route>();
-        TreeSet<Tile> sortedFood = new TreeSet<Tile>(ants.getFoodTiles());
-        TreeSet<Tile> sortedAnts = new TreeSet<Tile>(ants.getMyAnts());
+        
         for (Tile foodLoc : sortedFood) {
             for (Tile antLoc : sortedAnts) {
                 int distance = ants.getDistance(antLoc, foodLoc);
@@ -101,13 +99,18 @@ public class MyBot extends Bot {
                 foodTargets.put(route.getEnd(), route.getStart());
             }
         }
-        
-        // add new hills to set
+    }
+    
+    public void addHills(Ants ants){
+    	// add new hills to set
         for (Tile enemyHill : ants.getEnemyHills()) {
             if (!enemyHills.contains(enemyHill)) {
                 enemyHills.add(enemyHill);
             }
         }
+    }
+    
+    public void attackHills(Ants ants, TreeSet<Tile> sortedAnts){
         // attack hills
         List<Route> hillRoutes = new ArrayList<Route>();
         for (Tile hillLoc : enemyHills) {
@@ -123,8 +126,10 @@ public class MyBot extends Bot {
         for (Route route : hillRoutes) {
             doMoveLocation(route.getStart(), route.getEnd());
         }
-        
-        // explore unseen areas
+    }
+    
+    public void explore(Ants ants, TreeSet<Tile> sortedAnts){
+    	  // explore unseen areas
         for (Tile antLoc : sortedAnts) {
             if (!orders.containsValue(antLoc)) {
                 List<Route> unseenRoutes = new ArrayList<Route>();
@@ -141,7 +146,9 @@ public class MyBot extends Bot {
                 }
             }
         }
-        
+    }
+    
+    public void unblockHills(Ants ants){
         // unblock hills
         for (Tile myHill : ants.getMyHills()) {
             if (ants.getMyAnts().contains(myHill) && !orders.containsValue(myHill)) {
@@ -152,5 +159,29 @@ public class MyBot extends Bot {
                 }
             }
         }
+    }
+    
+    @Override
+    public void doTurn() {
+        Ants ants = getAnts();
+        orders.clear();
+        Map<Tile, Tile> foodTargets = new HashMap<Tile, Tile>();
+        List<Route> foodRoutes = new ArrayList<Route>();
+        TreeSet<Tile> sortedFood = new TreeSet<Tile>(ants.getFoodTiles());
+        TreeSet<Tile> sortedAnts = new TreeSet<Tile>(ants.getMyAnts());
+        
+        detectUnseen(ants);
+        
+        preventSteppingHill(ants);
+
+        findFood(ants,foodTargets,foodRoutes,sortedFood,sortedAnts);
+        
+        addHills(ants);
+        
+        attackHills(ants,sortedAnts);
+        
+        explore(ants,sortedAnts);
+        
+        unblockHills(ants);
     }
 }
